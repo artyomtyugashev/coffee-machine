@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <title>coffe machine</title>
+</head>
+
+<body>
+
+    <header class="header">
+        <a href="#" class="logo">
+            <img src="img/philips-logo.png" alt="logo">
+        </a>
+    </header>
+
+    <nav class="menu" id="menu">
+
+        <div class="box-cont">
+            <div class="button">
+                <img class="cup-1" id="btn" src="img/btn.png" alt="vkl">
+            </div>
+            <button class="start-stop box_start" disabled>
+                <div class="flash box_flash"></div>
+                <img class="cup-1" id="start-stop" src="img/start.png" alt="start">
+                <img class="cup-1" id="start-stop1" src="img/stop.png" alt="stop">
+            </button>
+            <div class="box-container hide">
+                <div class="box box2" id="box-1">
+                    <img class="cup-1" src="img/cup-8.png" alt="espresso">
+                    <h3>espresso</h3>
+                    <p class="cen">x1</p>
+                    <div class="square box_square"></div>
+                    <p>x2</p>
+                    <div class="square box_square"></div>
+                </div>
+                <div class="box box2">
+                    <img class="cup-1" src="img/cup-3.png" alt="coffe">
+                    <h3>coffee</h3>
+                    <p>x1</p>
+                    <div class="square box_square"></div>
+                    <p>x2</p>
+                    <div class="square box_square"></div>
+                </div>
+                <div class="box box3">
+                    <img class="strelki" src="img/strelki-1png.png" alt="strelki">
+                    <img class="cup-1" id="bean" src="img/bean.png" alt="mochachino">
+                    <div class="mysquare box_square"></div>
+                    <div class="mysquare box_square"></div>
+                    <div class="mysquare box_square"></div>
+                </div>
+                <div class="box box3">
+                    <img class="strelki" src="img/strelki-1png.png" alt="strelki">
+                    <img class="cup-1" id="strelki" src="img/cup-5.png" alt="mysquare">
+                    <div class="mysquare box_square"></div>
+                    <div class="mysquare box_square"></div>
+                    <div class="mysquare box_square"></div>
+                </div>
+                <div class="box box1">
+                    <img class="cup-1" id="hot_water" src="img/cup-2.png" alt="hot-water">
+                    <h3>hot water</h3>
+                    <div class="square box_square"></div>
+                </div>
+                <div class="box box1">
+                    <img class="cup-1" id="steam" src="img/steam.png" alt="steam">
+                    <h3>steam</h3>
+                    <div class="square box_square"></div>
+                </div>
+                <div class="box box_blue">
+                    <img class="cup-1" id="aqua" src="img/aqua.png" alt="aqua-clean">
+                    <h3>aqua clean</h3>
+                    <div class="square-blue box_square"></div>
+                </div>
+                <div class="box box_blue">
+                    <img class="cup-1" id="calc" src="img/calc.png" alt="cacl/clean">
+                    <h3>calc/clean</h3>
+                    <div class="square-blue box_square"></div>
+                </div>
+                <div class="box-9">
+                    <div class="fail">
+                        <img class="cup-1" src="img/nowater.png" alt="">
+                        <div class="mysquare1 water_error"></div>
+                    </div>
+                    <div class="fail">
+                        <img class="cup-1" src="img/kont.png" alt="">
+                        <div class="mysquare1 beans_error"></div>
+                    </div>
+                    <div class="fail">
+                        <img class="cup-1" src="img/mistakepng.png" alt="">
+                        <div class="mysquare1 other_error"></div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="buy hide">
+                <div class="accept_buy">
+                    <p>Вы хотите купить:<span class="coffee_info"></span></p>
+                    <p>Цена:<span class="coffee_info_money"></span></p><br>
+                </div>
+                <button type="button" class="accept_buy_button btn_class"><img class="img_btn_class" src="img/yes.png"
+                        alt="Купить">
+                </button>
+                <button type="button" class="close_button btn_classs"><img class="img_btn_class" src="img/no.png"
+                        alt="Закрыть">
+                </button>
+            </div>
+            <div class="buy timer_default">
+                <div class="time"></div>
+                <script>
+                    window.onload = function () {
+                        window.setInterval(function () {
+                            var now = new Date();
+                            var clock = document.querySelector(".time");
+                            clock.innerHTML = now.toLocaleTimeString();
+                        }, 1000);
+                    };
+                </script>
+            </div>
+            <div class="buy service hide">
+                <div class="service_text">
+                    <p class="service_message"><br>Пополнить ресурсы и очистить от накипи</p>
+                </div>
+                <button type="button" class="service_button btn_class"><img class="img_btn_class" src="img/yes.png"
+                        alt="Пополнить">
+                </button>
+                <button type="button" class="close_button btn_classs"><img class="img_btn_class" src="img/no.png"
+                        alt="Закрыть">
+                </button>
+            </div>
+        </div>
+    </nav>
+    <script src="js/script.js"></script>
+</body>
+
+</html>
