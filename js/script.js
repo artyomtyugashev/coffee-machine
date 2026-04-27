@@ -48,6 +48,7 @@ const COLORS = {
 
 
 const MACHINE = new function () {
+
 	this.water = 1000;
 	this.beans = 100;
 	this.calc_clean = 2;
@@ -60,6 +61,9 @@ const MACHINE = new function () {
 	this.selected = null;
 	this.coffee = null;
 	this.counter = 0;
+	this.multiplier = 0;
+	this.strong = 0;
+	this.size = 0;
 
 
 	this.showCoffee = function () {
@@ -84,23 +88,29 @@ const MACHINE = new function () {
 		hot_water: new Coffee(200, 0, 10, 1, "Hot water"),
 	};
 
-	this.status = { //TODO: rename status -> machine_error_status
-		WATER: 1,
-		BEANS: 2,
-		CALC_CLEAN: 4,
-	};
-
-	this.multiplier = {
-		SMALL: 0.2,
-		MEDIUM: 1,
-		BIG: 2,
-	};
+	this.ENUMS = {
+		error: {
+			WATER: 1,
+			BEANS: 2,
+			CALC_CLEAN: 4,
+		},
+		size: {
+			SMALL: 0.2,
+			MEDIUM: 1,
+			BIG: 2,
+		},
+		strong: {
+			LIGHT: 0.5,
+			MEDIUM: 1,
+			STRONG: 2,
+		},
+	}
 
 	this.storageCheck = function () {
 		let condition = 0;
-		if (this.coffee.water > this.water) condition |= this.status.WATER;
-		if (this.coffee.beans > this.beans) condition |= this.status.BEANS;
-		if (this.coffee.calc_clean > this.calc_clean) condition |= this.status.CALC_CLEAN;
+		if (this.coffee.water > this.water) condition |= this.ENUMS.error.WATER;
+		if (this.coffee.beans > this.beans) condition |= this.ENUMS.error.BEANS;
+		if (this.coffee.calc_clean > this.calc_clean) condition |= this.ENUMS.error.CALC_CLEAN;
 		return condition;
 	};
 
@@ -110,19 +120,23 @@ const MACHINE = new function () {
 
 	function setConditionIndicator() {
 		let condition = this.storageCheck();
-		if (condition & this.status.WATER !== 0) setWarningBG(this.water_error);
-		if (condition & this.status.BEANS !== 0) setWarningBG(this.beans_error);
-		if (condition & this.status.CALC_CLEAN !== 0) setWarningBG(box_blue[1].querySelector(".box_square"));
+		if (condition & this.ENUMS.error.WATER !== 0) setWarningBG(this.water_error);
+		if (condition & this.ENUMS.error.BEANS !== 0) setWarningBG(this.beans_error);
+		if (condition & this.ENUMS.error.CALC_CLEAN !== 0) setWarningBG(box_blue[1].querySelector(".box_square"));
 	};
+	setConditionIndicator = setConditionIndicator.bind(this);
 
 	this.buy = function () {
 		setConditionIndicator();
-		this.water -= this.coffee.water * amount; //* this.multiplier;
-		this.beans -= this.coffee.beans * amount;// * this.multiplier;
+		this.water -= this.coffee.water * this.counter * this.multiplier;
+		this.beans -= this.coffee.beans * this.counter * this.multiplier;
 		this.calc_clean -= this.coffee.calc_clean;
-		this.balance += this.coffee.price * amount;//* this.multiplier;
+		this.balance += this.coffee.price * this.counter * this.multiplier;
 
+		buy.classList.toggle("hide");
+		box_container.classList.toggle("hide");
 	}
+	this.buy = this.buy.bind(this);
 
 	this.showBuy = function () {
 		if (this.counter > 0 && this.coffee !== undefined) {
@@ -140,8 +154,8 @@ const MACHINE = new function () {
 		this.calc_clean = 2;
 		this.water_error.style.backgroundColor = COLORS.PASSIVE_RED;
 		this.beans_error.style.backgroundColor = COLORS.PASSIVE_RED;
-		box_blue[0].querySelector(".box_square").style.backgroundColor = COLORS.ACTIVE_BLUE;
-		box_blue[1].querySelector(".box_square").style.backgroundColor = COLORS.ACTIVE_BLUE;
+		this.buttons.aqua_clean.style.backgroundColor = COLORS.ACTIVE_BLUE;
+		this.buttons.calc_clean.style.backgroundColor = COLORS.ACTIVE_BLUE;
 		service.classList.toggle("hide");
 		box_container.classList.toggle("hide");
 	}
@@ -156,45 +170,63 @@ function Coffee(water, beans, price, calc_clean, name) {
 	this.name = name;
 }
 
-for (const box of boxes) MACHINE.buttons[box.id] = box;
+class Button {
+	constructor(body) {
+		this.body = body;
+		this.indicators = body.querySelectorAll(".box_square");
+		this.counter = 0;
+		this.onClick = null;
+	}
+
+	clearIndicators() {
+		for (let indicator of this.indicators) { indicator.style.backgroundColor = COLORS.PASSIVE_RED; }
+	}
+
+	set onClick(func) {
+		this.body.addEventListener("click", func);
+	}
+
+}
+
+for (const box of boxes) {
+	MACHINE.buttons[box.id] = new Button(box);
+}
 
 service_button.onclick = MACHINE.service;
 start_stop.onclick = MACHINE.showBuy;
+accept_buy_button.onclick = MACHINE.buy;
 
 (function () {
 
-	function clearSquares(selected) {
-		for (let square of selected.querySelectorAll(".box_square")) {
-			square.style.backgroundColor = COLORS.PASSIVE_RED;
-		}
-	}
+	MACHINE.buttons.espresso.onClick = function () {
+		MACHINE.buttons.coffee.clearIndicators();
+		MACHINE.buttons.coffee.counter = 0;
+	};
+
+	MACHINE.buttons.coffee.onClick = function () {
+		MACHINE.buttons.espresso.clearIndicators();
+		MACHINE.buttons.espresso.counter = 0;
+	};
+
+
+
+})();
+
+
+(function () {
 
 	for (const _button in MACHINE.buttons) {
-		MACHINE.buttons[_button].addEventListener("click", function () {
-			let squares = this.querySelectorAll(".box_square");
-			let isNewButton = MACHINE.selected !== this;
-			let counter = 0;
-
-			if (isNewButton) {
-				if (MACHINE.selected !== null) {
-					clearSquares(MACHINE.selected);
-					MACHINE.counter = 0;
-				}
-				MACHINE.selected = this;
-				MACHINE.coffee = MACHINE.menu[this.id];
-			} else if (MACHINE.counter === squares.length) {
-				clearSquares(MACHINE.selected);
-				MACHINE.counter = 0;
+		MACHINE.buttons[_button].onClick = function () {
+			const btn = MACHINE.buttons[_button];
+			if (btn.counter === btn.indicators.length) {
+				btn.counter = 0;
+				btn.clearIndicators();
 				return;
 			}
-
-			if (squares.length === 2) counter = MACHINE.counter;
-			else counter = squares.length - MACHINE.counter - 1;
-
-			//console.log(MACHINE.counter, 'counter is', counter, isNewButton ? 'new' : 'this');
-			squares[counter].style.backgroundColor = COLORS.ACTIVE_RED;
-			MACHINE.counter++;
-		});
+			btn.indicators[btn.counter].style.backgroundColor = COLORS.ACTIVE_RED;
+			btn.counter++;
+			MACHINE.selected = btn;
+		};
 	}
 })();
 
@@ -205,71 +237,6 @@ for (let i = 0; i < close_button.length; i++) {
 		box_container.classList.toggle("hide");
 	}
 }
-
-//accept_buy_button.onclick
-accept_buy_button.onclick = function () {
-	while (true) {
-		break;
-		console.log(water);
-		console.log(beans);
-		console.log(calc_clean);
-		if (espresso == 1) {
-			total += espresso_cost;
-			water -= 200;
-			beans -= 20;
-			calc_clean--;
-			processing();
-			zeroing();
-			break;
-		}
-		if (espresso == 2) {
-			total += espresso_cost * 2;
-			water -= 400;
-			beans -= 40;
-			calc_clean--;
-			processing();
-			zeroing();
-			break;
-		}
-		if (coffee == 1) {
-			total += coffee_cost;
-			water -= 250;
-			beans -= 25;
-			calc_clean--;
-			processing();
-			zeroing();
-			break;
-		}
-		if (coffee == 2) {
-			total += coffee_cost * 2;
-			water -= 500;
-			beans -= 50;
-			calc_clean--;
-			processing();
-			zeroing();
-			break;
-		}
-		if (steam == 1) {
-			total += steam_cost;
-			water -= 10;
-			processing();
-			zeroing();
-			break;
-		}
-		if (hot_water == 1) {
-			total += hot_water_cost;
-			water -= 200;
-			calc_clean--;
-			processing();
-			zeroing();
-			break;
-		}
-	}
-	buy.classList.toggle("hide");
-	box_container.classList.toggle("hide");
-}
-
-
 
 //on\off button.onclick
 button.onclick = function () {
@@ -284,88 +251,32 @@ button.onclick = function () {
 	}
 }
 
-
-
-let espresso = 0;
-let coffee = 0;
-let steam = 0;
-let hot_water = 0;
-let current_icon = [];
-
-for (let i = 0; i < box_blue.length; i++) {
-	box_blue[i].onclick = function () {
-		while (true) {
-			if (water < 500 || beans < 50 || calc_clean < 1) {
-				service.classList.toggle("hide");
-				box_container.classList.toggle("hide");
-				break;
-			}
-			else {
-				break;
-			}
-		}
-	}
-}
-
-function zeroing() {
-	const box = document.querySelectorAll(".box .box_square");
-	for (let i = 0; i < box.length; i++) {
-		if (!box[i].classList.contains("square-blue") && !box[i].classList.contains("mysquare")) {
-			box[i].style.backgroundColor = "rgb(78, 10, 10)";
-		}
-		else if (!box[i].classList.contains("mysquare")) {
-			box[i].style.backgroundColor = "rgb(23, 9, 211)";
-		}
-	}
-}
 function processing() {
-	let flash_color = document.querySelector(".flash");
-	const color_before = "rgb(78, 10, 10)";
-	const color_after = "rgb(228, 4, 4)";
 
-	flash_color.style.setProperty("--sq-color", color_before);
-	before_color(color_before);
-	setTimeout(() => {
-		flash_color.style.setProperty("--sq-color", color_after);
-		after_color(color_after);
-		setTimeout(() => {
-			flash_color.style.setProperty("--sq-color", color_before);
-			before_color(color_before);
+	function setflashColor(color) {
+		flash_color.style.setProperty("--sq-color", color);
+	}
+
+	function blinks(amount, intervals) {
+		for (let i = 0; i < amount; i++) {
 			setTimeout(() => {
-				flash_color.style.setProperty("--sq-color", color_after);
-				after_color(color_after);
-				setTimeout(() => {
-					flash_color.style.setProperty("--sq-color", color_before);
-					before_color(color_before);
-					setTimeout(() => {
-						flash_color.style.setProperty("--sq-color", color_after);
-						after_color(color_after);
-						setTimeout(() => {
-							flash_color.style.setProperty("--sq-color", color_before);
-							before_color(color_before);
-							setTimeout(() => {
-								flash_color.style.setProperty("--sq-color", color_after);
-								after_color(color_after);
-								setTimeout(() => {
-									flash_color.style.setProperty("--sq-color", color_before);
-									before_color(color_before);
-									after_color(color_after);
-								}, 3000);
-							}, 1000);
-						}, 1000);
-					}, 1000);
-				}, 1000);
-			}, 1000);
-		}, 1000);
-	}, 1);
-}
-function before_color(color_before) {
-	for (let i = 0; i < current_icon.length; i++) {
-		current_icon[i].style.backgroundColor = color_before;
+				console.log("blink")
+			}, intervals += 1000);
+			setTimeout(() => {
+				console.log("blank")
+			}, intervals += 1000);
+		}
+		setTimeout(() => { longBlink(1000) }, intervals);
 	}
-}
-function after_color(color_after) {
-	for (let i = 0; i < current_icon.length; i++) {
-		current_icon[i].style.backgroundColor = color_after;
+
+	function longBlink(duration) {
+		setTimeout(() => {
+			console.log("long blink")
+			setTimeout(() => { console.log("blank") }, duration);
+		}, duration * 3);
 	}
+
+	let flash_color = document.querySelector(".flash");
+
+	blinks(3, 1000);
 }
